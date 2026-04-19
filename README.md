@@ -40,26 +40,7 @@
 ---
 
 ## 🎬 Demo
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│  🛡 AI THREAT DETECTION SYSTEM                   14:10:05 ● ACTIVE  │
-├──────────────┬──────────────┬──────────────┬───────────────────────┤
-│ TOTAL PACKETS│ THREATS      │ NORMAL       │ THREAT RATE           │
-│    1,201     │    1,059     │     142      │   88.2%               │
-├──────────────┴──────────────┴──────────────┴───────────────────────┤
-│ ⚠ LIVE TRAFFIC LOG         [ALL] [THREATS ONLY] [NORMAL ONLY]       │
-│  # TIME       SOURCE IP         DEST IP       ATTACK TYPE  STATUS  │
-│  1 14:09:40  192.168.47.131   192.168.127    🚨 Backdoor  THREAT  │
-│  2 14:09:39  192.168.127.136  192.168.47     🚨 DoS       THREAT  │
-│  3 14:09:39  192.168.47.130   192.168.127    ✅ Normal    NORMAL  │
-│                                                                     │
-│  ◈ ATTACK BREAKDOWN          ◈ SYSTEM LOG                          │
-│  DoS         ████████  243   [THREAT] .130→.131 | TCP | Backdoor   │
-│  Backdoor    ████      74    [THREAT] .131→.130 | TCP | DoS        │
-│  Exploits    ██        11    [NORMAL] .130→.131 | UDP | Normal      │
-└─────────────────────────────────────────────────────────────────────┘
-```
+![Project Dashboard](assets/dashboard-demo.png)
 
 ---
 
