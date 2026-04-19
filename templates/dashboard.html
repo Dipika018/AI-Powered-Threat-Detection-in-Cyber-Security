@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Threat Detection</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red: #ff2244;
+      --green: #00ff88;
+      --yellow: #ffcc00;
+      --blue: #00aaff;
+      --bg: #050508;
+      --panel: #0a0a10;
+      --border: #1a1a2e;
+      --font-mono: 'Share Tech Mono', monospace;
+      --font-title: 'Orbitron', sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--green);
+      font-family: var(--font-mono);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,255,136,0.015) 2px, rgba(0,255,136,0.015) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image:
+        linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .fixed-top {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: var(--bg);
+    }
+
+    .header {
+      padding: 12px 30px;
+      border-bottom: 1px solid var(--green);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0,255,136,0.03);
+    }
+
+    .header-left { display: flex; align-items: center; gap: 15px; }
+
+    .logo-icon {
+      width: 40px; height: 40px;
+      border: 2px solid var(--green);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      animation: logopulse 3s infinite;
+    }
+
+    @keyframes logopulse {
+      0%, 100% { box-shadow: 0 0 15px rgba(0,255,136,0.3); }
+      50%       { box-shadow: 0 0 30px rgba(0,255,136,0.7); }
+    }
+
+    .header h1 {
+      font-family: var(--font-title);
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: var(--green);
+      text-shadow: 0 0 20px rgba(0,255,136,0.5);
+    }
+
+    .header-right { display: flex; align-items: center; gap: 20px; }
+
+    .status-badge {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(0,255,136,0.05);
+      border: 1px solid var(--green);
+      padding: 6px 16px; border-radius: 4px;
+      font-size: 12px; letter-spacing: 2px;
+    }
+
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green);
+      animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; } 50% { opacity: 0.2; }
+    }
+
+    #clock {
+      font-family: var(--font-title);
+      font-size: 13px; color: var(--yellow); letter-spacing: 2px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px; padding: 12px 30px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px 18px;
+      position: relative; overflow: hidden;
+    }
+
+    .card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: var(--green);
+    }
+
+    .card.red::before    { background: var(--red); }
+    .card.yellow::before { background: var(--yellow); }
+    .card.blue::before   { background: var(--blue); }
+
+    .card-label { font-size: 10px; letter-spacing: 2px; color: #555; margin-bottom: 6px; text-transform: uppercase; }
+    .card-value { font-family: var(--font-title); font-size: 30px; font-weight: 900; color: var(--green); line-height: 1; }
+    .card.red .card-value    { color: var(--red);    text-shadow: 0 0 20px rgba(255,34,68,0.5); }
+    .card.yellow .card-value { color: var(--yellow); }
+    .card.blue .card-value   { color: var(--blue);   }
+    .card-sub { font-size: 10px; color: #444; margin-top: 4px; }
+
+    .main {
+      margin-top: 168px;
+      padding: 20px 30px;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 20px;
+      position: relative; z-index: 1;
+    }
+
+    .table-section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+    }
+
+    .section-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(255,34,68,0.05);
+    }
+
+    .section-title {
+      font-family: var(--font-title);
+      font-size: 12px; letter-spacing: 3px; color: var(--red);
+    }
+
+    .threat-count-badge {
+      background: rgba(255,34,68,0.15);
+      border: 1px solid var(--red);
+      color: var(--red); padding: 3px 10px;
+      border-radius: 4px; font-size: 11px;
+    }
+
+    .table-scroll { max-height: calc(100vh - 310px); overflow-y: auto; }
+    .table-scroll::-webkit-scrollbar { width: 4px; }
+    .table-scroll::-webkit-scrollbar-track { background: var(--bg); }
+    .table-scroll::-webkit-scrollbar-thumb { background: var(--green); border-radius: 2px; }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    thead th {
+      background: rgba(0,0,0,0.5); color: #555;
+      padding: 10px 14px; text-align: left;
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 5;
+    }
+
+    tbody td { padding: 10px 14px; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.03); color: #aaa; }
+
+    tbody tr { transition: background 0.2s; animation: rowslide 0.3s ease; }
+
+    @keyframes rowslide {
+      from { opacity: 0; transform: translateX(-10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    tbody tr:hover { background: rgba(255,34,68,0.05); }
+    .src-ip { color: var(--red)  !important; font-weight: bold; }
+    .dst-ip { color: var(--blue) !important; }
+
+    .attack-badge {
+      display: inline-block; padding: 3px 10px;
+      border-radius: 4px; font-size: 10px; letter-spacing: 1px; font-weight: bold;
+    }
+
+    .badge-dos       { background: rgba(255,34,68,0.2);  color: var(--red);    border: 1px solid var(--red); }
+    .badge-exploit   { background: rgba(255,100,0,0.2);  color: #ff6400;       border: 1px solid #ff6400; }
+    .badge-recon     { background: rgba(255,204,0,0.2);  color: var(--yellow); border: 1px solid var(--yellow); }
+    .badge-fuzz      { background: rgba(0,170,255,0.2);  color: var(--blue);   border: 1px solid var(--blue); }
+    .badge-backdoor  { background: rgba(180,0,255,0.2);  color: #cc00ff;       border: 1px solid #cc00ff; }
+    .badge-shellcode { background: rgba(255,34,68,0.2);  color: var(--red);    border: 1px solid var(--red); }
+    .badge-normal { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid var(--green); }
+    
+    .threat-tag {
+      background: rgba(255,34,68,0.15); color: var(--red);
+      border: 1px solid var(--red); padding: 3px 10px;
+      border-radius: 4px; font-size: 10px; letter-spacing: 1px;
+    }
+
+    .empty-msg { text-align: center; color: #333; padding: 40px; font-size: 13px; letter-spacing: 2px; }
+
+    .right-panel { display: flex; flex-direction: column; gap: 20px; }
+
+    .right-box { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+
+    .mini-chart { padding: 15px; display: flex; flex-direction: column; gap: 8px; }
+
+    .chart-row { display: flex; align-items: center; gap: 10px; }
+    .chart-time { font-size: 10px; color: #444; min-width: 45px; }
+    .chart-bar-wrap { flex: 1; height: 16px; background: #0d0d1a; border-radius: 3px; overflow: hidden; }
+    .chart-bar { height: 100%; background: linear-gradient(90deg, var(--red), #ff6644); border-radius: 3px; transition: width 0.5s ease; min-width: 2px; }
+    .chart-num { font-size: 10px; color: var(--red); min-width: 20px; text-align: right; }
+
+    .attack-list { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+    .attack-item { display: flex; justify-content: space-between; align-items: center; }
+    .attack-name { font-size: 11px; letter-spacing: 1px; color: #888; min-width: 100px; }
+    .attack-bar-wrap { flex: 1; margin: 0 10px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .attack-bar { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+    .attack-num { font-size: 11px; color: #666; min-width: 20px; text-align: right; }
+
+    .terminal-body {
+      padding: 12px; height: 160px; overflow-y: auto;
+      color: #555; font-size: 11px;
+    }
+    .terminal-body::-webkit-scrollbar { width: 3px; }
+    .terminal-body::-webkit-scrollbar-thumb { background: var(--green); }
+    .t-line { margin-bottom: 4px; line-height: 1.6; }
+    .t-line.threat { color: var(--red); }
+    .t-line.info   { color: #3a5a7a; }
+
+    .footer {
+      text-align: center; padding: 15px; color: #222;
+      font-size: 10px; letter-spacing: 2px;
+      border-top: 1px solid var(--border);
+      position: relative; z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="fixed-top">
+    <div class="header">
+      <div class="header-left">
+        <div class="logo-icon">🛡️</div>
+        <h1>AI THREAT DETECTION SYSTEM</h1>
+      </div>
+      <div class="header-right">
+        <div id="clock">00:00:00</div>
+        <div class="status-badge"><div class="dot"></div>MONITORING ACTIVE</div>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="card">
+        <div class="card-label">Total Packets</div>
+        <div class="card-value" id="total">0</div>
+        <div class="card-sub">Analyzed by AI</div>
+      </div>
+      <div class="card red">
+        <div class="card-label">Threats Detected</div>
+        <div class="card-value" id="threats">0</div>
+        <div class="card-sub">Malicious packets</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Normal Traffic</div>
+        <div class="card-value" id="normal">0</div>
+        <div class="card-sub">Safe packets</div>
+      </div>
+      <div class="card red">
+        <div class="card-label">Threat Rate</div>
+        <div class="card-value" id="accuracy">0%</div>
+        <div class="card-sub">Of total traffic</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <div class="table-section">
+	<div class="section-header">
+	  <span class="section-title">⚠ LIVE TRAFFIC LOG</span>
+	  <div style="display:flex;gap:8px;align-items:center;">
+	    <button onclick="setFilter('all')"    id="btn-all"    style="background:#0A2540;color:var(--blue);border:1px solid var(--blue);padding:3px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:var(--font-mono);">ALL</button>
+	    <button onclick="setFilter('threat')" id="btn-threat" style="background:#0A0010;color:var(--red);border:1px solid var(--red);padding:3px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:var(--font-mono);">THREATS ONLY</button>
+	    <button onclick="setFilter('normal')" id="btn-normal" style="background:#001A0A;color:var(--green);border:1px solid var(--green);padding:3px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:var(--font-mono);">NORMAL ONLY</button>
+	    <span class="threat-count-badge" id="threat-badge">0 THREATS</span>
+	  </div>
+	</div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Time</th><th>Source IP</th>
+              <th>Destination IP</th><th>Protocol</th>
+              <th>Attack Type</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="log-body">
+            <tr><td colspan="7" class="empty-msg">[ WAITING FOR THREAT DETECTION... ]</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="right-panel">
+
+      <div class="right-box">
+        <div class="section-header" style="background:rgba(255,204,0,0.05);">
+          <span class="section-title" style="color:var(--yellow);">◈ ATTACK BREAKDOWN</span>
+        </div>
+        <div class="attack-list" id="attack-list">
+          <div style="color:#333;font-size:11px;text-align:center;padding:10px;">No attacks yet...</div>
+        </div>
+      </div>
+
+      <div class="right-box">
+        <div class="section-header" style="background:rgba(0,255,136,0.03);">
+          <span class="section-title" style="color:var(--green);">◈ SYSTEM LOG</span>
+        </div>
+        <div class="terminal-body" id="terminal-log">
+          <div class="t-line info">[SYS] AI model loaded successfully</div>
+          <div class="t-line info">[SYS] Scapy packet capture active</div>
+          <div class="t-line info">[SYS] Monitoring network interface...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer">
+    AI-POWERED THREAT DETECTION &nbsp;|&nbsp; UNSW-NB15 DATASET &nbsp;|&nbsp;
+    XGBOOST + LIGHTGBM + RANDOMFOREST &nbsp;|&nbsp; KALI LINUX
+  </div>
+
+  <script>
+	// Clock
+	function updateClock() {
+	  document.getElementById('clock').textContent = new Date().toTimeString().slice(0,8);
+	}
+	setInterval(updateClock, 1000);
+	updateClock();
+
+	// Attack type
+	function getAttackType(src, dst, proto) {
+	  const types = ['DoS','Exploit','Reconnaissance','Fuzzers','Backdoor','Shellcode'];
+	  return types[(src+dst+proto).length % types.length];
+	}
+
+	function getBadgeClass(type) {
+	  return {
+	    DoS:'badge-dos', Exploit:'badge-exploit', Exploits:'badge-exploit',
+	    Reconnaissance:'badge-recon', Fuzzers:'badge-fuzz',
+	    Backdoor:'badge-backdoor', Shellcode:'badge-shellcode',
+	    Generic:'badge-generic', Analysis:'badge-recon',
+	    Worms:'badge-dos', Normal:'badge-normal'
+	  }[type] || 'badge-dos';
+	}
+
+	// State
+	let allThreats  = [];
+	let allNormal   = [];
+	let lastCount   = 0;   // track total received so far
+	let showFilter  = 'all';
+	const attackColors = {
+	  DoS:'#ff2244', Exploit:'#ff6400', Exploits:'#ff6400',
+	  Reconnaissance:'#ffcc00', Fuzzers:'#00aaff',
+	  Backdoor:'#cc00ff', Shellcode:'#ff88aa',
+	  Generic:'#888888', Analysis:'#ffcc00', Worms:'#ff2244'
+	};
+
+	// Filter buttons
+	function setFilter(f) {
+	  showFilter = f;
+	  ['all','threat','normal'].forEach(b => {
+	    document.getElementById('btn-'+b).style.opacity = f===b ? '1' : '0.4';
+	  });
+	  renderTable();
+	}
+
+	// Terminal log
+	function addTerminalLine(msg, type='info') {
+	  const log = document.getElementById('terminal-log');
+	  const d   = document.createElement('div');
+	  d.className = 't-line ' + type;
+	  d.textContent = msg;
+	  log.appendChild(d);
+	  log.scrollTop = log.scrollHeight;
+	  while (log.children.length > 60) log.removeChild(log.firstChild);
+	}
+
+	// Attack breakdown
+	const attackCounts = {};
+	function updateAttackBreakdown() {
+	  const list = document.getElementById('attack-list');
+	  if (!Object.keys(attackCounts).length) return;
+	  const total = Object.values(attackCounts).reduce((a,b) => a+b, 0);
+	  list.innerHTML = '';
+	  Object.entries(attackCounts)
+	    .sort((a,b) => b[1]-a[1])
+	    .forEach(([type, count]) => {
+	      const pct   = Math.round((count/total)*100);
+	      const color = attackColors[type] || '#ff2244';
+	      list.innerHTML += `
+		<div class="attack-item">
+		  <span class="attack-name">${type}</span>
+		  <div class="attack-bar-wrap">
+		    <div class="attack-bar" style="width:${pct}%;background:${color};"></div>
+		  </div>
+		  <span class="attack-num">${count}</span>
+		</div>`;
+	    });
+	}
+
+	// Render table
+	function renderTable() {
+	  const tbody = document.getElementById('log-body');
+
+	  let toShow = [];
+	  if (showFilter === 'threat')
+	    toShow = [...allThreats].reverse();
+	  else if (showFilter === 'normal')
+	    toShow = [...allNormal].reverse();
+	  else
+	    toShow = [...allThreats, ...allNormal]
+	      .sort((a,b) => b.time.localeCompare(a.time));
+
+	  if (!toShow.length) {
+	    tbody.innerHTML = `<tr><td colspan="7" class="empty-msg">[ WAITING FOR TRAFFIC... ]</td></tr>`;
+	    return;
+	  }
+
+	  tbody.innerHTML = '';
+	  toShow.forEach((item, i) => {
+	    const isThreat   = item.status === 'THREAT';
+	    const badgeClass = getBadgeClass(item.attack_type || 'Normal');
+	    const statusColor = isThreat ? 'var(--red)' : 'var(--green)';
+	    const statusText  = isThreat ? '🚨 THREAT' : '✅ NORMAL';
+	    const srcColor    = isThreat ? 'var(--red)' : 'var(--green)';
+
+	    tbody.innerHTML += `<tr>
+	      <td style="color:#333">${i+1}</td>
+	      <td style="color:#555">${item.time}</td>
+	      <td style="color:${srcColor};font-weight:bold">${item.src_ip}</td>
+	      <td style="color:var(--blue)">${item.dst_ip}</td>
+	      <td style="color:#888">${item.proto}</td>
+	      <td><span class="attack-badge ${badgeClass}">${item.attack_type || 'Normal'}</span></td>
+	      <td><span class="threat-tag" style="border-color:${statusColor};color:${statusColor}">${statusText}</span></td>
+	    </tr>`;
+	  });
+	}
+
+	// ── Main fetch — NO seenKeys, uses index-based deduplication ──
+	function fetchStatus() {
+	  fetch('/status')
+	    .then(r => r.json())
+	    .then(data => {
+	      // Update stat cards
+	      document.getElementById('total').textContent    = data.total    || 0;
+	      document.getElementById('threats').textContent  = data.threats  || 0;
+	      document.getElementById('normal').textContent   = data.normal   || 0;
+	      document.getElementById('accuracy').textContent = (data.threat_rate || 0) + '%';
+	      document.getElementById('threat-badge').textContent = (data.threats || 0) + ' THREATS';
+
+	      const allPkts = data.all_packets || [];
+
+	      // Only process NEW packets since last fetch
+	      const newPkts = allPkts.slice(lastCount);
+	      lastCount = allPkts.length;
+
+	      newPkts.forEach(t => {
+		t.attack_type = t.attack_type || 'Normal';
+
+		if (t.status === 'THREAT') {
+		  allThreats.push(t);
+		  attackCounts[t.attack_type] = (attackCounts[t.attack_type] || 0) + 1;
+		  addTerminalLine(
+		    `[THREAT] ${t.src_ip} → ${t.dst_ip} | ${t.proto} | ${t.attack_type}`,
+		    'threat'
+		  );
+		} else {
+		  allNormal.push(t);
+		  addTerminalLine(
+		    `[NORMAL] ${t.src_ip} → ${t.dst_ip} | ${t.proto}`,
+		    'normal'
+		  );
+		}
+	      });
+
+	      if (newPkts.length > 0) {
+		renderTable();
+		updateAttackBreakdown();
+	      }
+	    })
+	    .catch(() => {
+	      // Silent fail
+	    });
+	}
+
+	setInterval(fetchStatus, 2000);
+	fetchStatus();
+  </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+venv/
+dataset/
+model/*.pkl
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+*.csv
+*.zip
